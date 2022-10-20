@@ -111,6 +111,20 @@ class AddressBook(UserDict):
             yield self.data[keys[start]]
             start += 1
 
+    def load_address_book(self):
+        try:
+            object = self
+            with open("address_book.txt", "rb") as file:
+                object = pickle.load(file)
+            return object
+        except FileNotFoundError:
+            object = self
+            return object
+
+    def dump_address_book(self, address_book):
+        with open("address_book.txt", "wb") as file:
+            pickle.dump(address_book, file)
+
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -183,7 +197,7 @@ def add(data, address_book):
 
             else:
                 record = Record(name)
-                return f"{name} was added, but {phone} cannot be added because of the wrong format, use these formats: (00)-000-0-000 or (00)-000-00-00"
+                return f"{name} was added, but {phone} phone cannot be added because of the wrong format, use these formats: (00)-000-0-000 or (00)-000-00-00"
 
         elif len(info) == 2:
 
@@ -394,29 +408,9 @@ def handler(comm):
     return COMMANDS[comm]
 
 
-def load_address_book():
-
-    try:
-
-        with open("address_book.txt", "rb") as file:
-            deserialized = pickle.load(file)
-
-            return deserialized
-
-    except FileNotFoundError:
-
-        address_book = AddressBook()
-        return address_book
-
-
-def dump_address_book(address_book):
-
-    with open("address_book.txt", "wb") as file:
-        pickle.dump(address_book, file)
-
-
 def main():
-    address_book = load_address_book()
+
+    address_book = AddressBook().load_address_book()
     while True:
 
         user_command = input("Enter a command: ")
@@ -424,12 +418,19 @@ def main():
         if user_command.lower() == "hello":
             print(handler(user_command.lower())())
 
-        elif user_command.split(" ")[0].lower() not in list(COMMANDS.keys()) + ["exit", "close", "goodbye"]:
-            print("No such a command")
+        elif user_command.split(" ")[0].lower() not in list(COMMANDS.keys()) + ["exit", "close", "goodbye", "commands"]:
+            print("No such a command\nCheck all the commands using 'commands' command")
+
+        elif user_command == "commands":
+
+            commands = ["exit", "close", "goodbye", "commands"]
+            for key in COMMANDS.keys():
+                commands.append(key)
+            print(f"Here are the commands this bot can do:\n{commands}")
 
         elif user_command.lower() in ["exit", "close", "goodbye"]:
-            dump_address_book(address_book)
-            print("Address Book was saved to 'address_book.txt'")
+            AddressBook().dump_address_book(address_book)
+            print("Address Book was saved to file: 'address_book.txt'")
             print("Goodbye")
             break
 
